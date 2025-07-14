@@ -1,0 +1,155 @@
+Music Store SQL Analysis
+
+This project explores business questions using SQL on a music store database. The analysis includes insights into customer behavior, sales trends, and genre/artist popularity.
+
+SQL Queries & Answers
+
+Q1: Who is the senior-most employee based on job title?
+
+SELECT TOP 1 levels, first_name + ' ' + last_name AS full_name, employee_id
+FROM employee
+ORDER BY levels DESC;
+
+Answer: Mohan Madan is the most senior employee.
+
+Q2: Which countries have the most invoices?
+
+SELECT TOP 10 COUNT(*) AS Total_invoice, billing_country
+FROM invoice
+GROUP BY billing_country
+ORDER BY Total_invoice DESC;
+
+Answer: USA has the most invoices.
+
+Q3: What are the top 3 highest invoice totals?
+
+SELECT TOP 3 total, customer_id, billing_country
+FROM invoice
+ORDER BY total DESC;
+
+Answer: Top 3 totals: 23.76, 19.80, 19.80
+
+Q4: Which city has generated the most revenue?
+
+SELECT TOP 1 SUM(total) AS total, billing_city
+FROM invoice
+GROUP BY billing_city
+ORDER BY total DESC;
+
+Answer: Prague, with 273.24 total.
+
+Q5: Who is the best customer?
+
+SELECT TOP 1
+  customer.first_name + ' ' + customer.last_name AS full_name,
+  SUM(invoice.total) AS total_spent
+FROM customer
+JOIN invoice ON customer.customer_id = invoice.customer_id
+GROUP BY customer.first_name, customer.last_name
+ORDER BY total_spent DESC;
+
+Answer: František Wichterlová, spent 144.54
+
+Q6: Rock music listeners (emails, names, genre)
+
+SELECT
+  customer.email, customer.first_name, customer.last_name, genre.name
+FROM customer
+JOIN invoice ON customer.customer_id = invoice.customer_id
+JOIN invoice_line ON invoice.invoice_id = invoice_line.invoice_id
+JOIN track ON invoice_line.track_id = track.track_id
+JOIN genre ON track.genre_id = genre.genre_id
+GROUP BY customer.email, customer.first_name, customer.last_name, genre.name
+ORDER BY email ASC;
+
+Q7: Top 10 artists by number of rock tracks
+
+SELECT TOP 10
+  artist.name AS artist_name,
+  COUNT(track.track_id) AS rock_track_count
+FROM artist
+JOIN album ON artist.artist_id = album.artist_id
+JOIN track ON album.album_id = track.album_id
+JOIN genre ON track.genre_id = genre.genre_id
+WHERE genre.name = 'Rock'
+GROUP BY artist.name
+ORDER BY rock_track_count DESC;
+
+Answer: Iron Maiden, 213 rock tracks.
+
+Q8: Tracks longer than average
+
+SELECT name AS track_name, milliseconds
+FROM track
+WHERE milliseconds > (
+  SELECT AVG(milliseconds) FROM track
+)
+ORDER BY milliseconds DESC;
+
+Q9: How much each customer spent per artist
+
+SELECT
+  customer.first_name + ' ' + customer.last_name AS customer_name,
+  artist.name AS artist_name,
+  SUM(invoice_line.unit_price * invoice_line.quantity) AS total_spent
+FROM customer
+JOIN invoice ON customer.customer_id = invoice.customer_id
+JOIN invoice_line ON invoice.invoice_id = invoice_line.invoice_id
+JOIN track ON invoice_line.track_id = track.track_id
+JOIN album ON track.album_id = album.album_id
+JOIN artist ON album.artist_id = artist.artist_id
+GROUP BY customer.first_name, customer.last_name, artist.name
+ORDER BY total_spent DESC;
+
+Q10: Most popular genre per country
+
+WITH genre_counts AS (
+  SELECT customer.country, genre.name AS genre_name, COUNT(*) AS purchases_per_genre
+  FROM genre
+  JOIN track ON genre.genre_id = track.genre_id
+  JOIN invoice_line ON track.track_id = invoice_line.track_id
+  JOIN invoice ON invoice.invoice_id = invoice_line.invoice_id
+  JOIN customer ON invoice.customer_id = customer.customer_id
+  GROUP BY customer.country, genre.name
+),
+max_genre_per_country AS (
+  SELECT country, MAX(purchases_per_genre) AS max_purchases
+  FROM genre_counts
+  GROUP BY country
+)
+SELECT gc.country, gc.genre_name, gc.purchases_per_genre
+FROM genre_counts gc
+JOIN max_genre_per_country mg
+  ON gc.country = mg.country AND gc.purchases_per_genre = mg.max_purchases
+ORDER BY purchases_per_genre DESC;
+
+Q11: Top customer per country by total spent
+
+WITH customer_totals AS (
+  SELECT
+    customer.customer_id,
+    customer.first_name + ' ' + customer.last_name AS customer_name,
+    customer.country,
+    SUM(invoice_line.unit_price * invoice_line.quantity) AS total_spent
+  FROM customer
+  JOIN invoice ON customer.customer_id = invoice.customer_id
+  JOIN invoice_line ON invoice.invoice_id = invoice_line.invoice_id
+  GROUP BY customer.customer_id, customer.first_name, customer.last_name, customer.country
+),
+max_spent_per_country AS (
+  SELECT country, MAX(total_spent) AS max_spent
+  FROM customer_totals
+  GROUP BY country
+)
+SELECT
+  ct.country,
+  ct.customer_name,
+  ct.total_spent
+FROM customer_totals ct
+JOIN max_spent_per_country mspc
+  ON ct.country = mspc.country AND ct.total_spent = mspc.max_spent
+ORDER BY total_spent DESC;
+
+Summary
+
+This project answers key business questions using SQL to explore music sales, customer trends, artist contributions, and genre popularity.
