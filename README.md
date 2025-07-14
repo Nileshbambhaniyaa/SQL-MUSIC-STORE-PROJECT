@@ -1,4 +1,4 @@
-# MS_SQL
+# SQL MUSIC STORE 
 # Music Store SQL Analysis
 
 This project explores business questions using SQL on a music store database. The analysis includes insights into customer behavior, sales trends, and genre/artist popularity.
