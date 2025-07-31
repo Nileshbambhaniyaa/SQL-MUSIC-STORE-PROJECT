@@ -1,4 +1,4 @@
-# 🎵 Business Intelligence & Sales Trend Analysis for Music Store Using SQL
+# 🎵 Music Store Data Analysis – SQL
 
 This project uses **SQL** to analyze a music store database and answer key **business questions** related to customer behavior, sales trends, and genre/artist popularity. The analysis helps uncover actionable insights for decision-making in the music retail business.
 
